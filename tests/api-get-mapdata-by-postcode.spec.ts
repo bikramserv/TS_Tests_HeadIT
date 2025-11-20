@@ -10,8 +10,8 @@ test('Retrieve map data filtered by valid post code using GET endpoint', async (
   // (Implicit in the ability to make a request)
 
   // When a GET request is made to the map data retrieval endpoint with a valid post code parameter
-  const validPostCode = '12345'; // TODO: Replace with a valid post code for your environment
-  const response = await apiContext.get(`https://localhost:7203/api/MapDatas?postCode=${validPostCode}`);
+  const validPostCode = '1112'; // TODO: Replace with a valid post code for your environment
+  const response = await apiContext.get(`https://localhost:7203/api/MapDatas/${validPostCode}`);
 
   // Then the response status should be 200 OK
   expect(response.status(), 'Expected HTTP 200 OK').toBe(200);

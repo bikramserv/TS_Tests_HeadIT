@@ -1,0 +1,1 @@
+{"isTestCaseImplemented": true, "problem": "", "testCase": "Validate GUID presence returns true when GUID exists in the database", "implementedIn": ["tests/api-validate-guid-get-exists.spec.ts"]}

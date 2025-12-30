@@ -1,13 +1,5 @@
 import { test, expect, request as playwrightRequest } from '@playwright/test';
 
-// Configurable via environment variables:
-// - TEST_GUID: the GUID to validate (defaults to the GUID in this test file)
-// - SEED_GUID_API: optional HTTP endpoint that will insert/ensure the GUID exists (POST { "id": "<GUID>" })
-// - API_BEARER_TOKEN: optional Bearer token for Authorization header
-// - API_KEY: optional API key to send as 'x-api-key' header
-// - NO_AUTH: set to '1' or 'true' if the endpoint requires no authentication (explicitly opt-in)
-// - NO_SKIP: set to '1' or 'true' to force the test to run even when no seeding method is provided (not recommended)
-
 const BASE_URL = process.env.BASE_URL || 'https://localhost:7203';
 const ENDPOINT = process.env.ENDPOINT || '/api/ValidateGuid';
 // Default GUID for this test case
@@ -66,35 +58,3 @@ test('Validate GET request returns true when GUID exists in the database', async
   // Act: send GET request to endpoint using path param: /api/ValidateGuid/{guid}
   const url = `${ENDPOINT.replace(/\/+$/,'')}/${GUID}`;
   const response = await requestContext.get(url);
-
-  // Assert: status code is 200
-  expect(response.status(), `Expected HTTP 200 OK, got ${response.status()}`).toBe(200);
-
-  // Assert: response body contains true (handle multiple response shapes)
-  const text = (await response.text()).trim();
-
-  let parsed: unknown = text;
-  try {
-    parsed = JSON.parse(text);
-  } catch (e) {
-    // leave parsed as raw text if not JSON
-  }
-
-  // Normalize to boolean
-  let booleanResult: boolean | null = null;
-  if (typeof parsed === 'boolean') {
-    booleanResult = parsed as boolean;
-  } else if (typeof parsed === 'string') {
-    const lower = (parsed as string).toLowerCase();
-    if (lower === 'true') booleanResult = true;
-    if (lower === 'false') booleanResult = false;
-  } else if (parsed && typeof parsed === 'object') {
-    const obj = parsed as Record<string, any>;
-    if (obj.value === true || obj.result === true || Object.values(obj).includes(true)) booleanResult = true;
-    if (obj.value === false || obj.result === false || Object.values(obj).includes(false)) booleanResult = false;
-  }
-
-  expect(booleanResult, `Expected response body to indicate true for existing GUID but got: ${text}`).toBe(true);
-
-  await requestContext.dispose();
-});

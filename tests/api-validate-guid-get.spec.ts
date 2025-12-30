@@ -1,13 +1,5 @@
 import { test, expect, request as playwrightRequest } from '@playwright/test';
 
-// Configurable via environment variables:
-// - TEST_GUID: the GUID to validate (defaults to the GUID in the test case)
-// - SEED_GUID_API: optional HTTP endpoint that will insert/ensure the GUID exists (POST { "id": "<GUID>" })
-// - API_BEARER_TOKEN: optional Bearer token for Authorization header
-// - API_KEY: optional API key to send as 'x-api-key' header
-// - NO_AUTH: set to '1' or 'true' if the endpoint requires no authentication (explicitly opt-in)
-// - NO_SKIP: set to '1' or 'true' to force the test to run even when no seeding method is provided (not recommended)
-
 const BASE_URL = process.env.BASE_URL || 'https://localhost:7203';
 const ENDPOINT = process.env.ENDPOINT || '/api/ValidateGuid';
 const GUID = process.env.TEST_GUID || '3fa85f64-5717-4562-b3fc-2c963f66afa6';

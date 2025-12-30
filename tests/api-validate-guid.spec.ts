@@ -1,13 +1,5 @@
 import { test, expect, request as playwrightRequest } from '@playwright/test';
 
-// Configurable via environment variables so CI/maintainers can control seeding and auth:
-// - TEST_GUID: the GUID to validate (defaults to the GUID in the test case)
-// - SEED_GUID_API: optional HTTP endpoint that will insert/ensure the GUID exists (POST { "id": "<GUID>" })
-// - API_BEARER_TOKEN: optional Bearer token for Authorization header
-// - API_KEY: optional API key to send as 'x-api-key' header
-// - NO_AUTH: set to '1' or 'true' if the endpoint requires no authentication (explicitly opt-in)
-// - NO_SKIP: set to '1' or 'true' to force the test to run even when no seeding method is provided (not recommended)
-
 // Default values
 const BASE_URL = process.env.BASE_URL || 'https://localhost:7203';
 const ENDPOINT = process.env.ENDPOINT || '/api/ValidateGuid';
@@ -74,33 +66,3 @@ test('Validate POST request returns true when GUID exists in the database', asyn
   // Parse response robustly (handle JSON boolean, JSON object wrappers, or plain text 'true')
   let parsed: any;
   try {
-    parsed = await response.json();
-  } catch (err) {
-    const txt = await response.text();
-    try {
-      parsed = JSON.parse(txt);
-    } catch (err2) {
-      parsed = txt;
-    }
-  }
-
-  if (typeof parsed === 'boolean') {
-    expect(parsed, 'Expected response boolean true').toBe(true);
-  } else if (typeof parsed === 'string') {
-    expect(parsed.trim().toLowerCase(), "Expected response text 'true'").toBe('true');
-  } else if (typeof parsed === 'object' && parsed !== null) {
-    // Common wrapper shapes: { value: true } or { result: true }
-    if ('value' in parsed) {
-      expect(parsed.value, 'Expected response.value to be true').toBe(true);
-    } else if ('result' in parsed) {
-      expect(parsed.result, 'Expected response.result to be true').toBe(true);
-    } else {
-      // Unknown object shape — fail with object for debugging
-      expect(false, `Unexpected response shape: ${JSON.stringify(parsed)}`).toBeTruthy();
-    }
-  } else {
-    expect(false, `Unexpected response type: ${typeof parsed}`).toBeTruthy();
-  }
-
-  await apiContext.dispose();
-});

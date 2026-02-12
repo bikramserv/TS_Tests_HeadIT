@@ -15,8 +15,10 @@ const BEARER = process.env.API_BEARER_TOKEN;
 const API_KEY = process.env.API_KEY;
 const NO_AUTH = String(process.env.NO_AUTH || '').toLowerCase() === '1' || String(process.env.NO_AUTH || '').toLowerCase() === 'true';
 
-// Test: Validate GET request returns false when GUID format is invalid
-test('Validate GET request returns false when GUID format is invalid', async () => {
+// Test: Validate that a malformed GUID format is rejected by the backend
+test('Validate that a malformed GUID format is rejected by the backend', async () => {
+  // Given the backend API is running and accessible
+
   // Arrange: build headers and request context
   const headers: Record<string, string> = {
     accept: 'application/json',
@@ -36,40 +38,42 @@ test('Validate GET request returns false when GUID format is invalid', async () 
     extraHTTPHeaders: headers,
   });
 
-  // Act: send GET request to endpoint using path param: /api/ValidateGuid/{guid}
+  // When a malformed GUID string is submitted for validation
   const url = `${ENDPOINT.replace(/\/+$/,'')}/${GUID}`;
   const response = await requestContext.get(url);
 
-  // Assert: Accept either a 200 with a boolean false response or a 400/422 with an invalid-guid error
+  // Then the backend should respond with failure indicating the GUID format is invalid
   const status = response.status();
 
   if (status === 200) {
-    // Normalize and assert boolean false in several possible response shapes
+    // Accept a 200 status with a false boolean body indicating invalid format
     const text = (await response.text()).trim();
-
     let parsed: unknown = text;
     try {
       parsed = JSON.parse(text);
     } catch (e) {
       // leave parsed as raw text if not JSON
     }
-
     let booleanResult: boolean | null = null;
+
     if (typeof parsed === 'boolean') {
-      booleanResult = parsed as boolean;
+      booleanResult = parsed;
     } else if (typeof parsed === 'string') {
-      const lower = (parsed as string).toLowerCase();
-      if (lower === 'false') booleanResult = false;
+      const lower = parsed.toLowerCase();
       if (lower === 'true') booleanResult = true;
+      if (lower === 'false') booleanResult = false;
     } else if (parsed && typeof parsed === 'object') {
       const obj = parsed as Record<string, any>;
-      if (obj.value === false || obj.result === false || Object.values(obj).includes(false)) booleanResult = false;
       if (obj.value === true || obj.result === true || Object.values(obj).includes(true)) booleanResult = true;
+      if (obj.value === false || obj.result === false || Object.values(obj).includes(false)) booleanResult = false;
     }
 
     expect(booleanResult, `Expected response body to indicate false for invalid GUID but got: ${text}`).toBe(false);
-  } else if ([400, 422].includes(status)) {
-    // Parse error response and verify it indicates an invalid GUID format
+
+  } else {
+    // Accept 400 or 422 status with an error message indicating invalid GUID format
+    expect([400, 422]).toContain(status);
+
     let parsed: any;
     try {
       parsed = await response.json();
@@ -84,33 +88,25 @@ test('Validate GET request returns false when GUID format is invalid', async () 
 
     if (parsed && typeof parsed === 'object') {
       if ('error' in parsed && typeof parsed.error === 'string') {
-        const lower = parsed.error.toLowerCase();
-        expect(lower).toContain('invalid');
-        expect(lower).toContain('guid');
+        expect(parsed.error.toLowerCase()).toContain('invalid');
+        expect(parsed.error.toLowerCase()).toContain('guid');
       } else if ('message' in parsed && typeof parsed.message === 'string') {
-        const lower = parsed.message.toLowerCase();
-        expect(lower).toContain('invalid');
-        expect(lower).toContain('guid');
+        expect(parsed.message.toLowerCase()).toContain('invalid');
+        expect(parsed.message.toLowerCase()).toContain('guid');
       } else if ('errors' in parsed) {
         const errStr = JSON.stringify(parsed.errors).toLowerCase();
         expect(errStr).toContain('invalid');
         expect(errStr).toContain('guid');
       } else {
-        // Fallback: inspect entire object string
-        const asStr = JSON.stringify(parsed).toLowerCase();
-        expect(asStr).toContain('invalid');
-        expect(asStr).toContain('guid');
+        expect(false, `Unexpected error response shape: ${JSON.stringify(parsed)}`).toBeTruthy();
       }
     } else if (typeof parsed === 'string') {
       const lower = parsed.toLowerCase();
       expect(lower).toContain('invalid');
       expect(lower).toContain('guid');
     } else {
-      expect(false, `Unexpected error response for invalid GUID format: ${String(parsed)}`).toBeTruthy();
+      expect(false, `Unexpected response type for error message: ${typeof parsed}`).toBeTruthy();
     }
-  } else {
-    // Unexpected status code
-    expect([200, 400, 422], `Expected HTTP 200 or 400/422 for invalid GUID format, got ${status}`).toContain(status);
   }
 
   await requestContext.dispose();

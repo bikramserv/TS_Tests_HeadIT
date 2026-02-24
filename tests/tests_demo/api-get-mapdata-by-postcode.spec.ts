@@ -9,8 +9,9 @@ test('Retrieve map data filtered by valid post code using GET endpoint', async (
   // Given the Gateway API is running and accessible
   // (Implicit in the ability to make a request)
 
+  
   // When a GET request is made to the map data retrieval endpoint with a valid post code parameter
-  const validPostCode = '2215HT'; // TODO: Replace with a valid post code for your environment
+  const validPostCode = '2215HHT'; // TODO: Replace with a valid post code for your environment
   const response = await apiContext.get(`https://localhost:7203/api/MapDatas/${validPostCode}`);
 
   // Then the response status should be 200 OK

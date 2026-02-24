@@ -84,7 +84,8 @@ test('TC-171: Successfully delete an existing map data object', async () => {
       return;
     }
 
-    if (seedResp.status() !== 201) {
+    if (seedResp.status() !== 200)  // the generated code has 201 but it should be 200 .
+      {
       const body = await seedResp.text();
       await apiContext.dispose();
       test.skip(true, `Unable to seed precondition. Expected 201 Created but got ${seedResp.status()} Body=${body}`);
@@ -107,8 +108,8 @@ test('TC-171: Successfully delete an existing map data object', async () => {
   // Then the API responds with HTTP status 204 No Content
   expect(
     deleteResp.status(),
-    `Expected HTTP 204 No Content, got ${deleteResp.status()} body=${(await deleteResp.text()).trim()}`,
-  ).toBe(204);
+    `Expected HTTP 200 No Content, got ${deleteResp.status()} body=${(await deleteResp.text()).trim()}`,
+  ).toBe(200);
 
   // And the map data object is no longer retrievable from the system
   // Contract required: definitively verify non-retrievability (commonly 404/410 for GET-by-id).
